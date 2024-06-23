@@ -8,10 +8,26 @@ const app = express();
 
 app.use(express.json());
 
+// Use the session in customer routes to make a secure login
 app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}))
 
 app.use("/customer/auth/*", function auth(req,res,next){
-//Write the authenication mechanism here
+    if(req.session.authorization) {
+        token = req.session.authorization['accessToken'];
+        // Verify the JWT TOKEN
+        jwt.verify(token, "access",(err,user)=>{
+            if(!err){
+                req.user = user;
+                // if token verification is success then proceed to the actual route implementation
+                next();
+            }
+            else{
+                return res.status(403).json({message: "User is not authenticated."})
+            }
+         });
+     } else {
+         return res.status(403).json({message: "User is not logged in"})
+     }
 });
  
 const PORT =5000;
