@@ -11,6 +11,7 @@ app.use(express.json());
 // Use the session in customer routes to make a secure login
 app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}))
 
+// middle ware to verify token
 app.use("/customer/auth/*", function auth(req,res,next){
     if(req.session.authorization) {
         token = req.session.authorization['accessToken'];

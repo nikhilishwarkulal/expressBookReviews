@@ -4,28 +4,6 @@ let books = require("./booksdb.js");
 const regd_users = express.Router();
 
 let users = [];
-// Check if user is a vaild user
-const isValid = (username) => {
-    let userswithsamename = users.filter((user) => {
-        return user.username === username
-    });
-    if (userswithsamename.length > 0) {
-        return true;
-    } else {
-        return false;
-    }
-}
-// check if user is authenticated
-const authenticatedUser = (username, password) => {
-    let validusers = users.filter((user) => {
-        return (user.username === username && user.password === password)
-    });
-    if (validusers.length > 0) {
-        return true;
-    } else {
-        return false;
-    }
-}
 
 // Login if you are a registered user
 regd_users.post("/login", (req, res) => {
@@ -47,7 +25,7 @@ regd_users.post("/login", (req, res) => {
     }
 });
 
-// Task 8: Add a book review
+// Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
     const username = req.session.authorization.username;
@@ -58,24 +36,48 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     }
     if (books[isbn]){
         books[isbn].reviews[username] = review;
-        res.send(`The review of the book with ISBN: ${isbn} from user: ${username} has been published.`);
+        res.send(`The review of the book with ISBN: ${isbn} for user: ${username} is published.`);
     } else {
-        res.send(`There is no books with ISBN: ${isbn} were found in the database.`);
+        res.send(`There is no books with ISBN: ${isbn} is found in the database.`);
     }
 });
 
-// Task 9: Delete a book review
+// Delete a book review
 regd_users.delete("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
     const username = req.session.authorization.username;
   
     if (books[isbn].reviews[username]){
         delete books[isbn].reviews[username];
-        res.send(`The review of the book with ISBN ${isbn} from user ${username} has been deleted.`);
+        res.send(`The review of the book with ISBN: ${isbn} for user: ${username} is deleted.`);
     } else {
-        res.send(`No reviews with ISBN ${isbn} from user ${username} were found in the database.`);
+        res.send(`No reviews with ISBN: ${isbn} for user: ${username} were found in the database.`);
     }
 });
+
+//// - validation code
+// Check if user is a vaild user
+const isValid = (username) => {
+  let userswithsamename = users.filter((user) => {
+      return user.username === username
+  });
+  if (userswithsamename.length > 0) {
+      return true;
+  } else {
+      return false;
+  }
+}
+// check if user is authenticated
+const authenticatedUser = (username, password) => {
+  let validusers = users.filter((user) => {
+      return (user.username === username && user.password === password)
+  });
+  if (validusers.length > 0) {
+      return true;
+  } else {
+      return false;
+  }
+}
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
