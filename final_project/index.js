@@ -1,39 +1,41 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const session = require('express-session')
-const customer_routes = require('./router/auth_users.js').authenticated;
-const genl_routes = require('./router/general.js').general;
+const customerRoutes = require('./router/auth_users.js').authenticated;
+const generalRoutes = require('./router/general.js').general;
 
 const app = express();
+const PORT = 5000;
+const SESSION_SECRET = "fingerprint_customer";
+const JWT_SECRET = "access";
 
 app.use(express.json());
 
 // Use the session in customer routes to make a secure login
-app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}))
+app.use("/customer",session({secret:SESSION_SECRET,resave: true, saveUninitialized: true}))
 
 // middle ware to verify token
 app.use("/customer/auth/*", function auth(req,res,next){
-    if(req.session.authorization) {
-        token = req.session.authorization['accessToken'];
-        // Verify the JWT TOKEN
-        jwt.verify(token, "access",(err,user)=>{
-            if(!err){
-                req.user = user;
-                // if token verification is success then proceed to the actual route implementation
-                next();
-            }
-            else{
-                return res.status(403).json({message: "User is not authenticated."})
-            }
-         });
-     } else {
-         return res.status(403).json({message: "User is not logged in"})
-     }
+
+    const token = req.session.authorization?.accessToken;
+    
+    if (!token) {
+        return res.status(403).json({ message: "User is not logged in." });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: "User is not authenticated." });
+        }
+        
+        req.user = user;
+        next();
+    });
+    
 });
- 
-const PORT =5000;
 
-app.use("/customer", customer_routes);
-app.use("/", genl_routes);
 
-app.listen(PORT,()=>console.log("Server is running"));
+app.use("/customer", customerRoutes);
+app.use("/", generalRoutes);
+
+app.listen(PORT,()=>console.log("Server is running on port ${PORT}"));
